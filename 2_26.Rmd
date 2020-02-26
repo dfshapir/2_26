@@ -1,0 +1,54 @@
+---
+title: "2_26"
+author: "Daniel Shapiro"
+date: "2/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(rstanarm)
+library(broom)
+library(scales)
+library(tidybayes)
+```
+
+```{r}
+set.seed(9)
+
+load("nes.rda")
+
+nes <- nes %>%
+  select(year, partyid7, real_ideo, race_adj, age_discrete, educ1, female, income) %>%
+  drop_na() %>%
+  mutate(gender = as.factor(ifelse(female == 1, "female", "non-female")))
+
+reg_1 <- stan_glm(partyid7 ~ gender, data = nes, refresh = 0)
+```
+
+```{r}
+set.seed(9)
+
+summary(reg_1)
+
+tidy_coef <- tidy(reg_1)
+
+# Extracted the intercept and the slope for the regression line
+
+model_intercept <- tidy_coef$estimate[1]
+model_slope <- tidy_coef$estimate[2]
+
+draws <- spread_draws(reg_1, `(Intercept)`, `gendernon-female`)
+
+ggplot(nes, aes(x = gender, y = partyid7)) +
+  geom_point() +
+  geom_abline(data = draws, aes(intercept = `(Intercept)`, slope = `gendernon-female`), size = 0.1, alpha = 0.08, color = "skyblue") +
+  geom_abline(intercept = model_intercept, slope = model_slope) +
+  scale_y_continuous(labels = comma) +
+  labs(title = "Relationship of Gender and Party ID Among Selected Voters",
+       subtitle = "Data from Textbook",
+       x = "Gender",
+       y = "Party ID")
+```
+
