@@ -83,3 +83,16 @@ fit_2 <- race %>%
   mutate(pred_1 = predict(reg_2, race))
 ```
 
+```{r}
+reg_3 <- stan_glm(partyid7 ~ real_ideo, data = nes, refresh = 0)
+summary(reg_3)
+
+fit_3 <- nes %>%
+  mutate(pred_3 = predict(reg_3, nes))
+```
+
+```{r}
+fit_3 <- fit_3 %>%
+  mutate(partyid7, real_ideo, pred_3)
+```
+
